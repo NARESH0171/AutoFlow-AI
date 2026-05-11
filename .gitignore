@@ -12,6 +12,7 @@ out.txt
 # Generated outputs
 generated_flowcharts/
 flowchart_output.png
+static/autoflow_*.png
 
 # Environments
 .env

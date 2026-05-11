@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUTOFLOW AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="page-shell">
+        <section class="hero-card">
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                <svg class="sun-icon" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="moon-icon" viewBox="0 0 24 24">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <span class="tooltip">Theme</span>
+            </button>
+
+            <div class="hero-copy">
+                <p class="eyebrow">AUTOFLOW AI</p>
+                <h1>Universal Workflow Visualization Platform</h1>
+                <p class="subcopy">
+                    Paste code, inspect errors instantly, and generate a downloadable flowchart without leaving
+                    the page.
+                </p>
+            </div>
+
+            <div class="workspace-grid">
+                <section class="panel editor-panel">
+                    <div class="panel-header">
+                        <h2>Workspace</h2>
+                        <div class="mode-tabs">
+                            <button id="tabCodeMode" class="tab-button active">Code Mode</button>
+                            <button id="tabTextMode" class="tab-button">Text Mode</button>
+                        </div>
+                    </div>
+
+                    <div id="codeModeSection">
+                        <textarea id="codeInput" spellcheck="false" placeholder="Paste your Python code here...">count = 0
+while count &lt; 3:
+    print(count)
+    count += 1
+
+if count == 3:
+    print("done")
+else:
+    print("error")</textarea>
+
+                        <div class="options-row" style="margin-bottom: 16px;">
+                            <div class="select-wrapper" style="flex: 1;">
+                                <label for="languageDropdown">Programming Language</label>
+                                <select id="languageDropdown" class="modern-select">
+                                    <option value="Python">Python</option>
+                                    <option value="Java">Java</option>
+                                    <option value="C">C</option>
+                                    <option value="C++">C++</option>
+                                    <option value="JavaScript">JavaScript</option>
+                                </select>
+                            </div>
+                            <div class="select-wrapper" style="flex: 1;">
+                                <label>Flowchart Detail Level</label>
+                                <div class="radio-group" style="display: flex; gap: 20px; margin-top: 12px; color: var(--text-secondary); font-size: 0.95em;">
+                                    <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                        <input type="radio" name="codeDetailMode" value="Simplified" checked> Simplified Mode
+                                    </label>
+                                    <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                        <input type="radio" name="codeDetailMode" value="Detailed"> Detailed Mode
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="options-row">
+                            <div class="select-wrapper">
+                                <label for="styleDropdown">Flowchart Style</label>
+                                <select id="styleDropdown" class="modern-select">
+                                    <option value="Simple">Simple</option>
+                                    <option value="Detailed">Detailed</option>
+                                    <option value="Presentation Mode">Presentation Mode</option>
+                                    <option value="Minimal">Minimal</option>
+                                    <option value="Colorful">Colorful</option>
+                                </select>
+                            </div>
+                            <div class="select-wrapper">
+                                <label for="themeDropdown">Color Theme</label>
+                                <select id="themeDropdown" class="modern-select">
+                                    <option value="Dark Developer">Dark Developer</option>
+                                    <option value="Blue Theme">Blue Theme</option>
+                                    <option value="Green Theme">Green Theme</option>
+                                    <option value="Purple Theme">Purple Theme</option>
+                                    <option value="PPT">PPT (Light)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="suggestion-container">
+                            <span id="suggestionBadge" class="suggestion-badge" style="opacity: 0;">Recommended: Simple Flowchart</span>
+                        </div>
+
+                        <div class="button-row">
+                            <button id="runButton" class="primary-button" type="button">Run Code</button>
+                            <button id="flowchartButton" class="secondary-button" type="button">Generate Flowchart</button>
+                        </div>
+                    </div>
+
+                    <div id="textModeSection" class="hidden">
+                        <textarea id="textInput" spellcheck="false" placeholder="Type your unstructured paragraph or flow here...
+
+Example:
+The system allows users to log in, verify their credentials, and provide access to the dashboard if valid, otherwise display an error."></textarea>
+
+                        <div class="button-row" id="analyzeTextRow" style="margin-top: 10px;">
+                            <button id="analyzeTextButton" class="primary-button" type="button" style="width: 100%;">Analyze Text &amp; Extract Logic</button>
+                        </div>
+
+                        <div id="extractedStepsContainer" class="hidden" style="margin-top: 16px;">
+                            <div class="panel-header" style="margin-bottom: 8px;">
+                                <h2>Detected Steps</h2>
+                                <span class="panel-tag" style="background: rgba(56, 189, 248, 0.2); color: var(--primary);">Editable</span>
+                            </div>
+                            <textarea id="extractedStepsInput" spellcheck="false" style="height: 120px; border-color: var(--primary);" placeholder="Mapped steps will appear here..."></textarea>
+
+                            <div class="options-row" style="margin-top: 16px; margin-bottom: 16px;">
+                                <div class="select-wrapper" style="flex: 1;">
+                                    <label>Diagram Detail Level</label>
+                                    <div class="radio-group" style="display: flex; gap: 20px; margin-top: 12px; color: var(--text-secondary); font-size: 0.95em;">
+                                        <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                            <input type="radio" name="textDetailMode" value="Simplified" checked> Simplified Mode
+                                        </label>
+                                        <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                            <input type="radio" name="textDetailMode" value="Detailed"> Detailed Mode
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="options-row" style="margin-top: 16px;">
+                                <div class="select-wrapper">
+                                    <label for="textStyleDropdown">Diagram Style</label>
+                                    <select id="textStyleDropdown" class="modern-select">
+                                        <option value="Flowchart">Flowchart</option>
+                                        <option value="Circular">Circular</option>
+                                        <option value="Block Diagram">Block Diagram</option>
+                                    </select>
+                                </div>
+                                <div class="select-wrapper">
+                                    <label for="textThemeDropdown">Color Theme</label>
+                                    <select id="textThemeDropdown" class="modern-select">
+                                        <option value="Dark Developer">Dark Developer</option>
+                                        <option value="Blue Theme">Blue Theme</option>
+                                        <option value="Green Theme">Green Theme</option>
+                                        <option value="Purple Theme">Purple Theme</option>
+                                        <option value="PPT Light Theme">PPT Light Theme</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="suggestion-container">
+                                <div id="textSuggestionPanel" class="suggestion-panel" style="display: none; background: rgba(56, 189, 248, 0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                                    <strong style="color: var(--primary);">Recommended: <span id="textSuggestionType"></span></strong>
+                                    <p id="textSuggestionReason" style="margin: 4px 0 0; font-size: 0.9em; opacity: 0.8;"></p>
+                                </div>
+                            </div>
+
+                            <div class="button-row">
+                                <button id="textFlowchartButton" class="secondary-button" type="button" style="width: 100%;">Generate Infographic</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel result-panel">
+                    <div class="panel-header">
+                        <h2>Execution Result</h2>
+                        <span id="statusBadge" class="status-badge idle">Waiting</span>
+                    </div>
+
+                    <div class="result-block">
+                        <h3>Error Message</h3>
+                        <pre id="errorOutput">No code has been executed yet.</pre>
+                    </div>
+
+                    <div class="result-block">
+                        <h3>Program Output</h3>
+                        <pre id="stdoutOutput">Program output will appear here.</pre>
+                    </div>
+
+                    <div class="result-block">
+                        <h3>Traceback</h3>
+                        <pre id="tracebackOutput">Detailed traceback information will appear here when available.</pre>
+                    </div>
+                </section>
+            </div>
+
+            <section class="panel preview-panel">
+                <div class="panel-header">
+                    <h2>Flowchart Preview</h2>
+                    <a id="downloadLink" class="download-link disabled" href="#" download="autoflow-flowchart.png" aria-disabled="true">
+                        Download PNG
+                    </a>
+                </div>
+
+                <p id="flowchartMessage" class="flowchart-message">
+                    Generate a flowchart to preview the exported PNG here.
+                </p>
+
+                <div id="imageFrame" class="image-frame hidden">
+                    <img id="flowchartImage" alt="Generated Python flowchart preview">
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <h2 class="footer-logo">AutoFlow AI</h2>
+                <p class="footer-tagline">Universal Workflow Visualization Platform </p>
+            </div>
+
+            <nav class="footer-nav" aria-label="Footer navigation">
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </nav>
+
+            <div class="footer-divider"></div>
+
+            <div class="footer-bottom">
+                <p class="copyright">&copy; 2026 AutoFlow AI | Crafted by Logique Kriger</p>
+                <p class="tech-stack">Built with <span class="accent-text">Python &amp; Flask</span></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

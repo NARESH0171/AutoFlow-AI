@@ -102,6 +102,7 @@ class FlowchartBuilder:
         self.counter = 0
 
     def build(self, code: str, output_path: str) -> str:
+        render_target = Path(output_path)
         try:
             tree = ast.parse(code)
         except SyntaxError:
@@ -115,7 +116,7 @@ class FlowchartBuilder:
             self._connect(flow_exit, end_node)
 
         try:
-            return self.graph.render(filename=output_path, cleanup=True)
+            return self.graph.render(filename=render_target.name, directory=str(render_target.parent), cleanup=True)
         except Exception as exc:
             raise RuntimeError("Graphviz execution failed.") from exc
 

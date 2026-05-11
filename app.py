@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import tempfile
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request, url_for, send_from_directory
@@ -12,9 +14,39 @@ from flowchart import generate_flowchart
 from text_diagram import generate_text_diagram, extract_natural_language
 
 BASE_DIR = Path(__file__).resolve().parent
-STATIC_DIR = BASE_DIR / "static"
+APP_DIR = BASE_DIR
+if not (APP_DIR / "templates").exists():
+    nested_app_dir = BASE_DIR / "AUTOFLOW AI"
+    if (nested_app_dir / "templates").exists():
+        APP_DIR = nested_app_dir
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
+TEMPLATE_DIR = APP_DIR / "templates"
+STATIC_DIR = APP_DIR / "static"
+
+
+def _resolve_generated_dir() -> Path:
+    configured_dir = os.getenv("AUTOFLOW_OUTPUT_DIR", "").strip()
+    if configured_dir:
+        target_dir = Path(configured_dir)
+    elif os.getenv("VERCEL"):
+        target_dir = Path(tempfile.gettempdir()) / "autoflow"
+    else:
+        target_dir = STATIC_DIR
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+    return target_dir
+
+
+GENERATED_DIR = _resolve_generated_dir()
+
+
+def _build_image_url(filename: str) -> str:
+    if GENERATED_DIR.resolve() == STATIC_DIR.resolve():
+        return url_for("static", filename=filename)
+    return url_for("generated_file", filename=filename)
+
+
+app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
 
 
 @app.route("/")
@@ -23,10 +55,17 @@ def index() -> str:
     return render_template("index.html")
 
 
+@app.route("/generated/<path:filename>")
+def generated_file(filename: str):
+    """Serve diagrams created at runtime from the writable output directory."""
+    return send_from_directory(GENERATED_DIR, filename)
+
+
 @app.route("/download/<path:filename>")
 def download(filename: str):
     """Force download of the flowchart image."""
-    return send_from_directory(STATIC_DIR, filename, as_attachment=True, download_name="autoflow-architecture.png")
+    source_dir = GENERATED_DIR if (GENERATED_DIR / filename).exists() else STATIC_DIR
+    return send_from_directory(source_dir, filename, as_attachment=True, download_name="autoflow-architecture.png")
 
 
 @app.post("/api/text/analyze")
@@ -87,8 +126,8 @@ def generate_text_diagram_backend():
 
     from text_diagram import generate_multi_diagram
     try:
-        generated_path = Path(generate_multi_diagram(steps, diagram_type=diagram_type, output_dir=str(STATIC_DIR), theme=theme))
-        flowchart_path = url_for("static", filename=generated_path.name)
+        generated_path = Path(generate_multi_diagram(steps, diagram_type=diagram_type, output_dir=str(GENERATED_DIR), theme=theme))
+        flowchart_path = _build_image_url(generated_path.name)
     except Exception as exc:
         flowchart_error = f"Diagram generation failed: {exc}"
 
@@ -164,8 +203,8 @@ def generate() -> tuple[object, int] | object:
             extracted = simplify_steps(extracted)
             
         try:
-            generated_path = Path(generate_multi_diagram(extracted, diagram_type="Flowchart", output_dir=str(STATIC_DIR), theme=theme))
-            flowchart_path = url_for("static", filename=generated_path.name)
+            generated_path = Path(generate_multi_diagram(extracted, diagram_type="Flowchart", output_dir=str(GENERATED_DIR), theme=theme))
+            flowchart_path = _build_image_url(generated_path.name)
             debug_result = {
                 "success": True,
                 "error": "",
@@ -193,8 +232,8 @@ def generate() -> tuple[object, int] | object:
             if detail_mode == "Simplified":
                 extracted = simplify_steps(extracted)
                 
-            generated_path = Path(generate_multi_diagram(extracted, diagram_type="Flowchart", output_dir=str(STATIC_DIR), theme=theme))
-            flowchart_path = url_for("static", filename=generated_path.name)
+            generated_path = Path(generate_multi_diagram(extracted, diagram_type="Flowchart", output_dir=str(GENERATED_DIR), theme=theme))
+            flowchart_path = _build_image_url(generated_path.name)
         except SyntaxError as exc:
             flowchart_error = f"Flowchart could not be generated: {exc.msg} on line {exc.lineno}."
         except RuntimeError as exc:

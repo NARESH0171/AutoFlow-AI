@@ -232,6 +232,7 @@ class TextDiagramBuilder:
 
     def build(self, text: str, output_path: str) -> str:
         """Parse raw text, apply smart keyword groupings, and output PNG."""
+        render_target = Path(output_path)
         # 1. Split by arrows or pure newlines safely
         chunks = [c.strip() for c in re.split(r'(?i)\s*->\s*|\s*→\s*|\n+', text) if c.strip()]
         if not chunks:
@@ -286,7 +287,7 @@ class TextDiagramBuilder:
                 previous_node_label = chunk
 
         try:
-            return self.graph.render(filename=output_path, cleanup=True)
+            return self.graph.render(filename=render_target.name, directory=str(render_target.parent), cleanup=True)
         except Exception as exc:
             raise RuntimeError("Graphviz diagram execution failed.") from exc
 
@@ -415,6 +416,6 @@ def generate_multi_diagram(steps: list[str], diagram_type: str = "Flowchart", ou
         prev_id = current_id
 
     try:
-        return graph.render(filename=str(output_path), cleanup=True)
+        return graph.render(filename=output_path.name, directory=str(output_path.parent), cleanup=True)
     except Exception as exc:
         raise RuntimeError(f"Graphviz diagram generation failed: {exc}") from exc
