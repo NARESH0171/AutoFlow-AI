@@ -22,6 +22,7 @@ if not (APP_DIR / "templates").exists():
 
 TEMPLATE_DIR = APP_DIR / "templates"
 STATIC_DIR = APP_DIR / "static"
+PUBLIC_DIR = APP_DIR / "public"
 
 
 def _resolve_generated_dir() -> Path:
@@ -53,6 +54,12 @@ app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATI
 def index() -> str:
     """Render the single-page interface."""
     return render_template("index.html")
+
+
+@app.route("/assets/<path:filename>")
+def public_asset(filename: str):
+    """Serve local frontend assets during Flask development."""
+    return send_from_directory(PUBLIC_DIR / "assets", filename)
 
 
 @app.route("/generated/<path:filename>")
