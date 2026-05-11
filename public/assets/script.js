@@ -27,6 +27,19 @@ const analyzeTextButton = document.getElementById("analyzeTextButton");
 const extractedStepsContainer = document.getElementById("extractedStepsContainer");
 const extractedStepsInput = document.getElementById("extractedStepsInput");
 const analyzeTextRow = document.getElementById("analyzeTextRow");
+const isFileProtocol = window.location.protocol === "file:";
+
+if (isFileProtocol) {
+    setStatus("idle", "Preview Only");
+    errorOutput.textContent = "This page was opened from a local file. Styling and theme preview work here, but Run Code, Generate Flowchart, and text analysis require Flask or the deployed Vercel URL.";
+    stdoutOutput.textContent = "Open the app through http://127.0.0.1:5002 or your Vercel deployment to use backend features.";
+    tracebackOutput.textContent = "Direct file preview cannot call the Flask API endpoints.";
+    flowchartMessage.textContent = "Preview mode: backend-generated diagrams are unavailable when opened with file://.";
+    runButton.disabled = true;
+    flowchartButton.disabled = true;
+    analyzeTextButton.disabled = true;
+    textFlowchartButton.disabled = true;
+}
 
 tabCodeMode.addEventListener("click", () => {
     tabCodeMode.classList.add("active");
@@ -49,6 +62,7 @@ const textSuggestionReason = document.getElementById("textSuggestionReason");
 analyzeTextButton.addEventListener("click", () => submitTextAnalysis());
 
 async function submitTextAnalysis() {
+    if (isFileProtocol) return;
     const text = textInput.value;
     if (!text.trim()) return;
 
@@ -110,6 +124,10 @@ codeInput.addEventListener("input", () => {
 });
 
 async function analyzeCode() {
+    if (isFileProtocol) {
+        suggestionBadge.style.opacity = "0";
+        return;
+    }
     const code = codeInput.value;
     if (!code.trim()) {
         suggestionBadge.style.opacity = "0";
@@ -137,6 +155,7 @@ runButton.addEventListener("click", () => submitCode("run"));
 flowchartButton.addEventListener("click", () => submitCode("flowchart"));
 
 async function submitCode(mode) {
+    if (isFileProtocol) return;
     const code = codeInput.value;
 
     if (!code.trim()) {
@@ -254,6 +273,7 @@ function setLoadingState(isLoading, mode) {
 textFlowchartButton.addEventListener("click", () => submitTextDiagram());
 
 async function submitTextDiagram() {
+    if (isFileProtocol) return;
     const text = extractedStepsInput.value;
 
     if (!text.trim()) {
