@@ -231,6 +231,9 @@ function renderResponse(data) {
 
         const filename = data.flowchart_path.split("/").pop().split("?")[0];
         downloadLink.href = `/download/${filename}`;
+        const extension = (filename.split(".").pop() || "png").toLowerCase();
+        downloadLink.textContent = `Download ${extension.toUpperCase()}`;
+        downloadLink.setAttribute("download", `autoflow-flowchart.${extension}`);
 
         downloadLink.classList.remove("disabled");
         downloadLink.setAttribute("aria-disabled", "false");
@@ -244,6 +247,8 @@ function hideFlowchart(message) {
     flowchartImage.removeAttribute("src");
     flowchartMessage.textContent = message;
     downloadLink.href = "#";
+    downloadLink.textContent = "Download Diagram";
+    downloadLink.setAttribute("download", "autoflow-flowchart.png");
     downloadLink.classList.add("disabled");
     downloadLink.setAttribute("aria-disabled", "true");
 }

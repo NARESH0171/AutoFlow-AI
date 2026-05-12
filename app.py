@@ -23,6 +23,11 @@ if not (APP_DIR / "templates").exists():
 TEMPLATE_DIR = APP_DIR / "templates"
 STATIC_DIR = APP_DIR / "static"
 PUBLIC_DIR = APP_DIR / "public"
+LOCAL_ASSET_DIR = PUBLIC_DIR / "assets"
+if not LOCAL_ASSET_DIR.exists():
+    LOCAL_ASSET_DIR = TEMPLATE_DIR / "assets"
+if not LOCAL_ASSET_DIR.exists():
+    LOCAL_ASSET_DIR = STATIC_DIR
 
 
 def _resolve_generated_dir() -> Path:
@@ -42,12 +47,10 @@ GENERATED_DIR = _resolve_generated_dir()
 
 
 def _build_image_url(filename: str) -> str:
-    if GENERATED_DIR.resolve() == STATIC_DIR.resolve():
-        return url_for("static", filename=filename)
     return url_for("generated_file", filename=filename)
 
 
-app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
+app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=None)
 
 
 @app.route("/")
@@ -59,7 +62,7 @@ def index() -> str:
 @app.route("/assets/<path:filename>")
 def public_asset(filename: str):
     """Serve local frontend assets during Flask development."""
-    return send_from_directory(PUBLIC_DIR / "assets", filename)
+    return send_from_directory(LOCAL_ASSET_DIR, filename)
 
 
 @app.route("/generated/<path:filename>")
@@ -72,7 +75,13 @@ def generated_file(filename: str):
 def download(filename: str):
     """Force download of the flowchart image."""
     source_dir = GENERATED_DIR if (GENERATED_DIR / filename).exists() else STATIC_DIR
-    return send_from_directory(source_dir, filename, as_attachment=True, download_name="autoflow-architecture.png")
+    suffix = Path(filename).suffix.lower() or ".png"
+    return send_from_directory(
+        source_dir,
+        filename,
+        as_attachment=True,
+        download_name=f"autoflow-diagram{suffix}",
+    )
 
 
 @app.post("/api/text/analyze")
